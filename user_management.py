@@ -7,6 +7,7 @@ import bcrypt
 def insertUser(username, password, DoB):
     con = sql.connect("database_files/database.db")
     cur = con.cursor()
+    # Hash the password before it's saved so a database leak doesn't expose real credentials
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
     cur.execute(
         "INSERT INTO users (username,password,dateOfBirth) VALUES (?,?,?)",
@@ -24,6 +25,7 @@ def retrieveUsers(username, password):
         con.close()
         return False
     else:
+        # Compare against the stored hash instead of the old plain text check
         if not bcrypt.checkpw(password.encode('utf-8'), user[2]):
             con.close()
             return False
