@@ -17,7 +17,7 @@ def insertUser(username, password, DoB):
 def retrieveUsers(username, password):
     con = sql.connect("database_files/database.db")
     cur = con.cursor()
-    cur.execute(f"SELECT * FROM users WHERE username = '{username}'")
+    cur.execute("SELECT * FROM users WHERE username = ?", (username,))
     if cur.fetchone() == None:
         con.close()
         return False
@@ -42,7 +42,7 @@ def retrieveUsers(username, password):
 def insertFeedback(feedback):
     con = sql.connect("database_files/database.db")
     cur = con.cursor()
-    cur.execute(f"INSERT INTO feedback (feedback) VALUES ('{feedback}')")
+    cur.execute("SELECT * FROM users WHERE password = ?", (password,))
     con.commit()
     con.close()
 
@@ -50,7 +50,7 @@ def insertFeedback(feedback):
 def listFeedback():
     con = sql.connect("database_files/database.db")
     cur = con.cursor()
-    data = cur.execute("SELECT * FROM feedback").fetchall()
+    cur.execute("INSERT INTO feedback (feedback) VALUES (?)", (feedback,))
     con.close()
     f = open("templates/partials/success_feedback.html", "w")
     for row in data:
