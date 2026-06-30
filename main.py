@@ -2,15 +2,16 @@ from flask import Flask
 from flask import render_template
 from flask import request
 from flask import redirect
-from flask_cors import CORS
 import user_management as dbHandler
+from flask_wtf.csrf import CSRFProtect
 
 # Code snippet for logging a message
 # app.logger.critical("message")
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = '26.2'
+csrf = CSRFProtect(app)
 # Enable CORS to allow cross-origin requests (needed for CSRF demo in Codespaces)
-CORS(app)
 
 
 @app.route("/success.html", methods=["POST", "GET", "PUT", "PATCH", "DELETE"])
