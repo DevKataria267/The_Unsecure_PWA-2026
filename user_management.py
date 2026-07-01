@@ -2,7 +2,8 @@ import sqlite3 as sql
 import time
 import random
 import bcrypt
-
+import threading
+counter_lock = threading.Lock()
 
 def insertUser(username, password, DoB):
     con = sql.connect("database_files/database.db")
@@ -30,11 +31,12 @@ def retrieveUsers(username, password):
             con.close()
             return False
         # Plain text log of visitor count as requested by Unsecure PWA management
-        with open("visitor_log.txt", "r") as file:
-            number = int(file.read().strip())
-            number += 1
-        with open("visitor_log.txt", "w") as file:
-            file.write(str(number))
+        with counter_lock:
+            with open("visitor_log.txt", "r") as file:
+                number = int(file.read().strip())
+                number += 1
+            with open("visitor_log.txt", "w") as file:
+                file.write(str(number))
         # Simulate response time of heavy app for testing purposes
         time.sleep(random.randint(80, 90) / 1000)
         con.close()
@@ -44,7 +46,8 @@ def retrieveUsers(username, password):
 def insertFeedback(feedback):
     con = sql.connect("database_files/database.db")
     cur = con.cursor()
-    cur.execute("SELECT * FROM users WHERE password = ?", (password,))
+    # Feedback is now inserted using a parameterised query so user input can't break out and run as SQL
+    cur.execute("INSERT INTO feedback (feedback) VALUES (?)", (feedback,))
     con.commit()
     con.close()
 
@@ -52,7 +55,8 @@ def insertFeedback(feedback):
 def listFeedback():
     con = sql.connect("database_files/database.db")
     cur = con.cursor()
-    cur.execute("INSERT INTO feedback (feedback) VALUES (?)", (feedback,))
+    # Feedback list is now fetched safely and stored before looping through it
+    data = cur.execute("SELECT * FROM feedback").fetchall()
     con.close()
     f = open("templates/partials/success_feedback.html", "w")
     for row in data:

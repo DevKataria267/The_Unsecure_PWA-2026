@@ -2,28 +2,28 @@ from flask import Flask
 from flask import render_template
 from flask import request
 from flask import redirect
+from flask import session
 import user_management as dbHandler
 from flask_wtf.csrf import CSRFProtect
-
-# Code snippet for logging a message
-# app.logger.critical("message")
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '26.2'
 csrf = CSRFProtect(app)
-# Enable CORS to allow cross-origin requests (needed for CSRF demo in Codespaces)
 
 
 @app.route("/success.html", methods=["POST", "GET", "PUT", "PATCH", "DELETE"])
 def addFeedback():
+    # User must be logged in to access this page, redirect to login if not
+    if not session.get('user'):
+        return redirect("/index.html")
     if request.method == "GET" and request.args.get("url"):
         url = request.args.get("url", "")
-        # The URL logic was never verified, allowing attackers to send victims to any website.
-        # Only permit internal page redirects that are included in the authorized list.
+        # URL parameter was never validated so attackers could redirect victims to any site
+        # Fix: only allow redirects to internal pages that are on the approved list
         allowed = ["/", "/index.html", "/success.html", "/signup.html"]
-    if url not in allowed:
-        return redirect("/", code=302)
-    return redirect(url, code=302)
+        if url not in allowed:
+            return redirect("/", code=302)
+        return redirect(url, code=302)
     if request.method == "POST":
         feedback = request.form["feedback"]
         dbHandler.insertFeedback(feedback)
@@ -38,6 +38,9 @@ def addFeedback():
 def signup():
     if request.method == "GET" and request.args.get("url"):
         url = request.args.get("url", "")
+        allowed = ["/", "/index.html", "/success.html", "/signup.html"]
+        if url not in allowed:
+            return redirect("/", code=302)
         return redirect(url, code=302)
     if request.method == "POST":
         username = request.form["username"]
@@ -52,11 +55,12 @@ def signup():
 @app.route("/index.html", methods=["POST", "GET", "PUT", "PATCH", "DELETE"])
 @app.route("/", methods=["POST", "GET"])
 def home():
-    # Simple Dynamic menu
     if request.method == "GET" and request.args.get("url"):
         url = request.args.get("url", "")
+        allowed = ["/", "/index.html", "/success.html", "/signup.html"]
+        if url not in allowed:
+            return redirect("/", code=302)
         return redirect(url, code=302)
-    # Pass message to front end
     elif request.method == "GET":
         msg = request.args.get("msg", "")
         return render_template("/index.html", msg=msg)
@@ -65,6 +69,9 @@ def home():
         password = request.form["password"]
         isLoggedIn = dbHandler.retrieveUsers(username, password)
         if isLoggedIn:
+            # Fix: regenerate session after login so any planted session ID becomes invalid
+            session.clear()
+            session['user'] = username
             dbHandler.listFeedback()
             return render_template("/success.html", value=username, state=isLoggedIn)
         else:
