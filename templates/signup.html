@@ -2,8 +2,9 @@
 {% block content %}
 <h1>Signup Form</h1>
 <form action="/signup.html" method="POST" class="box">
+    <!-- CSRF token added to the signup form -->
+    <!-- Without this, an external site could silently create accounts on behalf of a visitor -->
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-    {{ csrf_token() }}
     <div class="input__wrapper">
         <input type="text" name="username" placeholder="Username" class="input__field">
     </div>            

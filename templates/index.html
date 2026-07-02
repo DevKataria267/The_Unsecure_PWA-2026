@@ -1,6 +1,10 @@
 {% extends 'layout.html' %} {% block content %}
 <h1>Login</h1>
 <form action="/" method="post" class="box">
+  <!-- CSRF token added to the login form -->
+  <!-- Previously there was no token here, meaning a forged POST request from an external -->
+  <!-- site would be accepted by the server as if it came from a legitimate logged in user -->
+  <!-- Flask-WTF now checks for this token on every submission and rejects anything without it -->
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
   <div class="input__wrapper">
     <input
